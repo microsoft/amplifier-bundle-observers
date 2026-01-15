@@ -1,0 +1,58 @@
+[project]
+name = "amplifier-bundle-observers"
+version = "0.1.0"
+description = "Automated code and conversation review through specialized AI observers"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Microsoft", email = "amplifier@microsoft.com" }]
+keywords = ["amplifier", "ai", "observers", "code-review", "hooks"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "amplifier-core",
+    "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.1.0",
+    "pyright>=1.1.0",
+]
+
+[tool.uv.sources]
+amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
+
+
+
+# Entry points for Amplifier module discovery
+[project.entry-points."amplifier.modules"]
+tool-observations = "amplifier_bundle_observers.tool_observations:mount"
+hooks-observations = "amplifier_bundle_observers.hooks_observations:mount"
+hooks-observations-display = "amplifier_bundle_observers.hooks_observations_display:mount"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["amplifier_bundle_observers"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP"]
+ignore = ["E501"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

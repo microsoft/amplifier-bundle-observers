@@ -1,0 +1,6 @@
+.venv
+.ruff_cache
+test-project
+__pycache__/
+*.pyc
+.amplifier/

@@ -1,0 +1,34 @@
+# Simple Observer Configuration
+#
+# Minimal setup with a single code reviewer watching Python files.
+# Good starting point for basic code quality monitoring.
+
+hooks:
+  - module: amplifier_bundle_observers.hooks_observations
+    config:
+      hooks:
+        - trigger: "response:complete"
+          priority: 5
+
+      execution:
+        mode: parallel_sync
+        timeout_per_observer: 30
+        on_timeout: skip
+
+      observers:
+        - name: "Code Reviewer"
+          role: "Reviews code for quality and correctness"
+          focus: |
+            Look for common code issues:
+            - Syntax errors and typos
+            - Unused imports and variables
+            - Missing error handling
+            - Code that could be simplified
+            - Potential bugs and edge cases
+          model: "claude-sonnet-4-20250514"
+          timeout: 30
+          watch:
+            - type: files
+              paths:
+                - "src/**/*.py"
+                - "**/*.py"

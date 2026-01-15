@@ -1,0 +1,101 @@
+# Multi-Observer Configuration
+#
+# Multiple specialized observers running in parallel for comprehensive review.
+# Each observer focuses on a specific aspect of code quality.
+
+hooks:
+  - module: amplifier_bundle_observers.hooks_observations
+    config:
+      hooks:
+        - trigger: "response:complete"
+          priority: 5
+
+      execution:
+        mode: parallel_sync
+        max_concurrent: 5
+        timeout_per_observer: 45
+        on_timeout: skip
+
+      observers:
+        # Security focused review
+        - name: "Security Reviewer"
+          role: "Security vulnerability analysis"
+          focus: |
+            Look for security vulnerabilities including:
+            - SQL injection risks (CWE-89)
+            - XSS vulnerabilities (CWE-79)
+            - Command injection (CWE-78)
+            - Path traversal (CWE-22)
+            - Hardcoded credentials or API keys
+            - Unsafe deserialization
+            - Missing authentication/authorization checks
+            - Insecure cryptographic practices
+          model: "claude-sonnet-4-20250514"
+          timeout: 45
+          watch:
+            - type: files
+              paths:
+                - "src/**/*.py"
+            - type: conversation
+              include_tool_calls: true
+          metadata:
+            category: "security"
+
+        # Performance analysis
+        - name: "Performance Reviewer"
+          role: "Performance and efficiency analysis"
+          focus: |
+            Identify performance issues:
+            - Inefficient algorithms (O(n^2) when O(n) possible)
+            - Unnecessary database queries (N+1 problems)
+            - Memory leaks or excessive allocations
+            - Blocking operations in async code
+            - Missing caching opportunities
+            - Redundant computations
+          model: "claude-sonnet-4-20250514"
+          timeout: 30
+          watch:
+            - type: files
+              paths:
+                - "src/**/*.py"
+          metadata:
+            category: "performance"
+
+        # Test coverage
+        - name: "Test Reviewer"
+          role: "Test coverage and quality analysis"
+          focus: |
+            Review testing quality:
+            - Missing test cases for new code
+            - Edge cases not covered
+            - Tests that don't actually test behavior
+            - Missing error case tests
+            - Insufficient assertions
+          model: "claude-sonnet-4-20250514"
+          timeout: 30
+          watch:
+            - type: files
+              paths:
+                - "src/**/*.py"
+                - "tests/**/*.py"
+          metadata:
+            category: "testing"
+
+        # Logic and reasoning
+        - name: "Logic Checker"
+          role: "Identifies logical errors in reasoning"
+          focus: |
+            Analyze reasoning quality:
+            - Circular reasoning
+            - False or unstated premises
+            - Missing edge cases in logic
+            - Incorrect conclusions
+            - Assumption violations
+          model: "claude-sonnet-4-20250514"
+          timeout: 30
+          watch:
+            - type: conversation
+              include_tool_calls: true
+              include_reasoning: true
+          metadata:
+            category: "logic"
