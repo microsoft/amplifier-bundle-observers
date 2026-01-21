@@ -9,12 +9,12 @@ includes:
 
 tools:
   - module: tool-observations
-    source: ./modules/tool-observations
+    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/tool-observations
     config: {}
 
 hooks:
   - module: hooks-observations
-    source: ./modules/hooks-observations
+    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
     config:
       hooks:
         - trigger: "orchestrator:complete"
@@ -27,7 +27,7 @@ hooks:
       observers: []  # Override in your bundle
 
   - module: hooks-observations-display
-    source: ./modules/hooks-observations-display
+    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations-display
     config:
       style: compact
       show_on_create: true
