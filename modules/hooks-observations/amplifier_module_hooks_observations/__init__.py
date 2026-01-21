@@ -510,29 +510,64 @@ Focus on issues within your expertise. Do not report issues outside your focus a
         return {"observations": []}
 
     def _aggregate_results(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Aggregate observations from all observer results."""
+        """Aggregate observations from all observer results, deduplicating within batch."""
         observations = []
+        seen_keys: set[str] = set()
 
         for result in results:
             if isinstance(result, dict) and "observations" in result:
-                observations.extend(result["observations"])
+                for obs in result["observations"]:
+                    # Create deduplication key from content + source_ref
+                    key = self._observation_key(obs)
+                    if key not in seen_keys:
+                        seen_keys.add(key)
+                        observations.append(obs)
+                    else:
+                        logger.debug(f"Skipping duplicate observation: {key[:50]}...")
 
         return observations
 
+    def _observation_key(self, obs: dict[str, Any]) -> str:
+        """Generate a deduplication key for an observation."""
+        # Use content + source_ref + observer for uniqueness
+        content = obs.get("content", "")[:200]  # First 200 chars of content
+        source_ref = obs.get("source_ref", "")
+        observer = obs.get("observer", "")
+        return f"{observer}:{source_ref}:{content}"
+
     async def _write_observations(self, observations: list[dict[str, Any]]) -> None:
-        """Write observations to the observations tool."""
+        """Write observations to the observations tool, skipping duplicates."""
         try:
             # Use coordinator.get() to access tools by mount point
             tool = self.coordinator.get("tools", "observations")
-            if tool:
-                # Tools have an execute() method
-                await tool.execute(
-                    {
-                        "operation": "create_batch",
-                        "observations": observations,
-                    }
-                )
-                logger.info(f"Wrote {len(observations)} observations to tool")
+            if not tool:
+                return
+
+            # Get existing observations to avoid duplicates
+            existing = await self._get_open_observations()
+            existing_keys = {self._observation_key(obs) for obs in existing}
+
+            # Filter out duplicates
+            new_observations = [
+                obs for obs in observations if self._observation_key(obs) not in existing_keys
+            ]
+
+            if not new_observations:
+                logger.debug("All observations already exist, skipping write")
+                return
+
+            skipped = len(observations) - len(new_observations)
+            if skipped > 0:
+                logger.debug(f"Skipping {skipped} duplicate observation(s)")
+
+            # Tools have an execute() method
+            await tool.execute(
+                {
+                    "operation": "create_batch",
+                    "observations": new_observations,
+                }
+            )
+            logger.info(f"Wrote {len(new_observations)} observations to tool")
         except Exception as e:
             logger.exception(f"Failed to write observations: {e}")
 
