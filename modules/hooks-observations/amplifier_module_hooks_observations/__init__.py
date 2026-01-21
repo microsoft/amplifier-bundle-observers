@@ -528,12 +528,16 @@ Focus on issues within your expertise. Do not report issues outside your focus a
         return observations
 
     def _observation_key(self, obs: dict[str, Any]) -> str:
-        """Generate a deduplication key for an observation."""
-        # Use content + source_ref + observer for uniqueness
-        content = obs.get("content", "")[:200]  # First 200 chars of content
+        """Generate a deduplication key for an observation.
+        
+        Uses observer + source_ref only - NOT content, since LLM-generated
+        content varies between runs even for the same underlying issue.
+        """
         source_ref = obs.get("source_ref", "")
         observer = obs.get("observer", "")
-        return f"{observer}:{source_ref}:{content}"
+        severity = obs.get("severity", "")
+        # Include severity for cases where same line has multiple issue types
+        return f"{observer}:{source_ref}:{severity}"
 
     async def _write_observations(self, observations: list[dict[str, Any]]) -> None:
         """Write observations to the observations tool, skipping duplicates."""
