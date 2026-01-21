@@ -529,15 +529,34 @@ Focus on issues within your expertise. Do not report issues outside your focus a
 
     def _observation_key(self, obs: dict[str, Any]) -> str:
         """Generate a deduplication key for an observation.
-        
-        Uses observer + source_ref only - NOT content, since LLM-generated
-        content varies between runs even for the same underlying issue.
+
+        Strategy varies by source type:
+        - File-based with source_ref: observer + source_ref + severity
+        - Conversation/other: observer + category + severity (+ content hash fallback)
+
+        Does NOT use raw LLM content since wording varies between runs.
         """
-        source_ref = obs.get("source_ref", "")
         observer = obs.get("observer", "")
+        source_ref = obs.get("source_ref", "")
         severity = obs.get("severity", "")
-        # Include severity for cases where same line has multiple issue types
-        return f"{observer}:{source_ref}:{severity}"
+        source_type = obs.get("source_type", "unknown")
+        metadata = obs.get("metadata", {}) or {}
+        category = metadata.get("category", "")
+
+        # File-based with specific location: dedupe on location
+        if source_ref and source_type == "file":
+            return f"{observer}:file:{source_ref}:{severity}"
+
+        # Has category (conversation or file): use category for stability
+        if category:
+            # Include source_ref if available (might be "turn:5" etc)
+            return f"{observer}:{category}:{severity}:{source_ref}"
+
+        # Fallback: normalized content hash (handles edge cases)
+        content = obs.get("content", "")
+        normalized = " ".join(content.lower().split())[:100]
+        content_hash = hashlib.md5(normalized.encode()).hexdigest()[:8]
+        return f"{observer}:{severity}:{content_hash}"
 
     async def _write_observations(self, observations: list[dict[str, Any]]) -> None:
         """Write observations to the observations tool, skipping duplicates."""
