@@ -201,12 +201,17 @@ Please review and address these observations in your response.
         """Run all observers in parallel with timeout."""
         max_concurrent = self.config.execution.max_concurrent
 
+        # Fetch existing observations ONCE for all observers (deduplication context)
+        existing_observations = await self._get_open_observations()
+        if existing_observations:
+            logger.debug(f"Passing {len(existing_observations)} existing observations to observers")
+
         # Create semaphore to limit concurrency
         semaphore = asyncio.Semaphore(max_concurrent)
 
         async def run_with_semaphore(observer: ObserverConfig) -> dict[str, Any]:
             async with semaphore:
-                return await self._spawn_observer(observer, event)
+                return await self._spawn_observer(observer, event, existing_observations)
 
         # Create tasks
         tasks = [run_with_semaphore(observer) for observer in observers]
@@ -228,6 +233,7 @@ Please review and address these observations in your response.
         self,
         observer: ObserverConfig,
         event: dict[str, Any],
+        existing_observations: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Spawn a single observer agent using direct provider call."""
         from amplifier_core import ChatRequest, Message
@@ -236,8 +242,8 @@ Please review and address these observations in your response.
             # Build content to review
             content = await self._build_review_content(observer, event)
 
-            # Build observer prompt
-            prompt = self._build_observer_prompt(observer, content)
+            # Build observer prompt with existing observations for deduplication
+            prompt = self._build_observer_prompt(observer, content, existing_observations)
 
             # Get provider from coordinator
             providers = self.coordinator.get("providers")
@@ -365,16 +371,38 @@ Please review and address these observations in your response.
 
         return "\n\n".join(content_parts)
 
-    def _build_observer_prompt(self, observer: ObserverConfig, content: str) -> str:
+    def _build_observer_prompt(
+        self,
+        observer: ObserverConfig,
+        content: str,
+        existing_observations: list[dict[str, Any]] | None = None,
+    ) -> str:
         """Build the prompt for an observer agent."""
-        return f"""You are **{observer.name}**, a specialized code reviewer.
+        existing_section = ""
+        if existing_observations:
+            existing_list = "\n".join(
+                f"- [{obs.get('severity', 'info')}] {obs.get('source_ref', 'unknown')}: "
+                f"{obs.get('content', '')[:150]}"
+                for obs in existing_observations
+            )
+            existing_section = f"""
+## Already Reported Issues
+
+The following issues have already been reported. **Do NOT report these again.**
+Only report NEW issues not already covered below:
+
+{existing_list}
+
+"""
+
+        return f"""You are **{observer.name}**, a specialized reviewer.
 
 ## Your Role
 {observer.role}
 
 ## Your Focus
 {observer.focus}
-
+{existing_section}
 ## Content to Review
 
 {content}
@@ -383,9 +411,10 @@ Please review and address these observations in your response.
 
 1. **Analyze** the content from your specialized perspective
 2. **Identify issues** that fall within your focus area
-3. **Be specific** - reference exact locations (file:line or message context)
-4. **Prioritize** - report only significant issues (max 5 per review)
-5. **Format** your response as JSON:
+3. **Skip duplicates** - if an issue is semantically the same as one already reported (even with different wording), do NOT report it again
+4. **Be specific** - reference exact locations (file:line or message context)
+5. **Prioritize** - report only significant NEW issues (max 5 per review)
+6. **Format** your response as JSON:
 
 ```json
 {{
@@ -403,7 +432,7 @@ Please review and address these observations in your response.
 }}
 ```
 
-6. If you find **no issues**, respond with:
+7. If you find **no NEW issues**, respond with:
 ```json
 {{
   "observations": []
