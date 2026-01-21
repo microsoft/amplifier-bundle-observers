@@ -17,9 +17,8 @@ from glob import glob
 from typing import Any
 
 from amplifier_core import HookResult
-from amplifier_core.events import ORCHESTRATOR_COMPLETE
 
-from amplifier_bundle_observers.models import (
+from .models import (
     ObservationsModuleConfig,
     ObserverConfig,
     WatchType,
@@ -256,10 +255,7 @@ Please review and address these observations in your response.
                 Message(role="user", content=prompt),
             ]
 
-            request = ChatRequest(
-                messages=messages,
-                model=observer.model,  # Request specific model
-            )
+            request = ChatRequest(messages=messages)
 
             # Make the LLM call
             response = await asyncio.wait_for(
@@ -449,7 +445,9 @@ Focus on issues within your expertise. Do not report issues outside your focus a
         else:
             text_result = str(result)
 
-        logger.debug(f"Observer '{observer_name}' extracted text (first 500 chars): {text_result[:500]}")
+        logger.debug(
+            f"Observer '{observer_name}' extracted text (first 500 chars): {text_result[:500]}"
+        )
 
         # Try to extract JSON from response
         try:
@@ -472,13 +470,17 @@ Focus on issues within your expertise. Do not report issues outside your focus a
                 # Look for JSON object pattern
                 import re
 
-                json_match = re.search(r"\{[^{}]*\"observations\"[^{}]*\[.*?\]\s*\}", json_text, re.DOTALL)
+                json_match = re.search(
+                    r"\{[^{}]*\"observations\"[^{}]*\[.*?\]\s*\}", json_text, re.DOTALL
+                )
                 if json_match:
                     json_text = json_match.group(0)
                     logger.debug(f"Extracted JSON via regex: {json_text[:200]}")
 
             data = json.loads(json_text)
-            logger.debug(f"Successfully parsed JSON with keys: {data.keys() if isinstance(data, dict) else 'N/A'}")
+            logger.debug(
+                f"Successfully parsed JSON with keys: {data.keys() if isinstance(data, dict) else 'N/A'}"
+            )
 
             if "observations" in data:
                 for obs in data["observations"]:

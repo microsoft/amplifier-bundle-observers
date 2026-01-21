@@ -1,0 +1,17 @@
+[project]
+name = "amplifier-module-hooks-observations"
+version = "0.1.0"
+description = "Observer orchestration hook for Amplifier"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = ["amplifier-core"]
+
+[tool.uv.sources]
+amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch = "main" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["amplifier_module_hooks_observations"]

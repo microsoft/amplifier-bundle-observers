@@ -11,7 +11,7 @@ from typing import Any
 
 from amplifier_core import ToolResult
 
-from amplifier_bundle_observers.models import Observation, Severity, Status
+from .models import Observation, Severity, Status
 
 logger = logging.getLogger(__name__)
 
