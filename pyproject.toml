@@ -32,12 +32,6 @@ amplifier-core = { git = "https://github.com/microsoft/amplifier-core", branch =
 
 
 
-# Entry points for Amplifier module discovery
-[project.entry-points."amplifier.modules"]
-tool-observations = "amplifier_bundle_observers.tool_observations:mount"
-hooks-observations = "amplifier_bundle_observers.hooks_observations:mount"
-hooks-observations-display = "amplifier_bundle_observers.hooks_observations_display:mount"
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
