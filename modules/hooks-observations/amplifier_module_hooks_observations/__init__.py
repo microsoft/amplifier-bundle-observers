@@ -14,9 +14,8 @@ import json
 import logging
 import os
 from glob import glob
-from typing import Any
-
 from pathlib import Path
+from typing import Any
 
 from amplifier_core import HookResult
 
@@ -164,7 +163,7 @@ Please review and address these observations in your response.
         if self._loaded_observers:
             return
 
-        bundles = self._get_available_bundles()
+        sources = self._get_bundle_sources()
 
         for ref in self.config.observers:
             if not ref.enabled:
@@ -173,7 +172,7 @@ Please review and address these observations in your response.
             try:
                 observer = await load_observer(
                     ref.observer,
-                    bundles=bundles,
+                    sources=sources,
                     base_path=self.base_path,
                 )
 
@@ -189,13 +188,35 @@ Please review and address these observations in your response.
             except Exception as e:
                 logger.error(f"Failed to load observer {ref.observer}: {e}")
 
-    def _get_available_bundles(self) -> dict[str, Any]:
-        """Get available bundles from coordinator for @-mention resolution."""
-        # Try to get bundles from coordinator
-        bundles = self.coordinator.get("bundles")
-        if bundles:
-            return bundles
-        return {}
+    def _get_bundle_sources(self) -> dict[str, str]:
+        """Get bundle sources for observer resolution.
+
+        Sources can come from:
+        1. Explicit config.sources mapping (preferred)
+        2. Coordinator's bundle registry (auto-discovery)
+
+        Returns:
+            Mapping of bundle names to their base paths
+        """
+        sources: dict[str, str] = {}
+
+        # 1. Start with explicitly configured sources
+        if self.config.sources:
+            sources.update(self.config.sources)
+
+        # 2. Try to auto-discover from coordinator's bundle registry
+        try:
+            bundles = self.coordinator.get("bundles")
+            if bundles:
+                for name, bundle in bundles.items():
+                    if name not in sources:  # Don't override explicit config
+                        bundle_base = getattr(bundle, "base_path", None)
+                        if bundle_base:
+                            sources[name] = str(bundle_base)
+        except Exception as e:
+            logger.debug(f"Could not get bundles from coordinator: {e}")
+
+        return sources
 
     async def _load_protocol_instructions(self) -> str:
         """Load the observer protocol instructions from context file."""
@@ -306,9 +327,7 @@ If no new issues and nothing resolved: `{"observations": [], "resolved": []}`
         # Fetch existing observations ONCE for all observers (deduplication context)
         existing_observations = await self._get_open_observations()
         if existing_observations:
-            logger.debug(
-                f"Passing {len(existing_observations)} existing observations to observers"
-            )
+            logger.debug(f"Passing {len(existing_observations)} existing observations to observers")
 
         # Load protocol instructions
         protocol = await self._load_protocol_instructions()
@@ -356,9 +375,7 @@ If no new issues and nothing resolved: `{"observations": [], "resolved": []}`
             content = await self._build_review_content(ref, event)
 
             # Build the full prompt with observer instructions, content, and protocol
-            prompt = self._build_observer_prompt(
-                observer, content, existing_observations, protocol
-            )
+            prompt = self._build_observer_prompt(observer, content, existing_observations, protocol)
 
             # Check if observer has tools - use spawn capability if so
             if observer.tools:
@@ -445,7 +462,8 @@ If no new issues and nothing resolved: `{"observations": [], "resolved": []}`
             Message(role="user", content=prompt),
         ]
 
-        request = ChatRequest(messages=messages, model=observer.model)
+        # model is passed as extra field (ChatRequest has extra="allow")
+        request = ChatRequest(messages=messages, model=observer.model)  # type: ignore[call-arg]
 
         # Make the LLM call
         response = await asyncio.wait_for(
@@ -589,9 +607,7 @@ The following issues were previously reported. Review them against the current c
                 obs_text = existing_section
             else:
                 obs_text = "No previously reported issues."
-            protocol_section = protocol_section.replace(
-                "{{existing_observations}}", obs_text
-            )
+            protocol_section = protocol_section.replace("{{existing_observations}}", obs_text)
 
         return f"""## Content to Review
 

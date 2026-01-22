@@ -207,8 +207,7 @@ class ObserverReference:
     def from_dict(cls, data: dict[str, Any]) -> "ObserverReference":
         """Create ObserverReference from dictionary."""
         watch_configs = [
-            WatchConfig.from_dict(w) if isinstance(w, dict) else w
-            for w in data.get("watch", [])
+            WatchConfig.from_dict(w) if isinstance(w, dict) else w for w in data.get("watch", [])
         ]
 
         return cls(
@@ -287,11 +286,25 @@ class HookConfig:
 
 @dataclass
 class ObservationsModuleConfig:
-    """Complete configuration for the hooks-observations module."""
+    """Complete configuration for the hooks-observations module.
+
+    The `sources` field maps bundle names to their base paths, enabling
+    observers to be loaded from different bundles:
+
+        sources:
+          observers: /path/to/observers-bundle
+          my-bundle: /path/to/my-bundle
+
+        observers:
+          - observer: observers:observers/security-auditor  # from observers bundle
+          - observer: my-bundle:custom/reviewer             # from my-bundle
+          - observer: ./local/observer.md                   # local file
+    """
 
     hooks: list[HookConfig] = field(default_factory=list)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     observers: list[ObserverReference] = field(default_factory=list)
+    sources: dict[str, str] = field(default_factory=dict)  # bundle_name -> base_path
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ObservationsModuleConfig":
@@ -307,16 +320,23 @@ class ObservationsModuleConfig:
 
         observers = [ObserverReference.from_dict(o) for o in data.get("observers", [])]
 
+        # Bundle sources mapping
+        sources = data.get("sources", {})
+
         return cls(
             hooks=hooks,
             execution=execution,
             observers=observers,
+            sources=sources,
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return {
+        result = {
             "hooks": [h.to_dict() for h in self.hooks],
             "execution": self.execution.to_dict(),
             "observers": [o.to_dict() for o in self.observers],
         }
+        if self.sources:
+            result["sources"] = self.sources
+        return result

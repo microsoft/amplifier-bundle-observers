@@ -45,11 +45,7 @@ hooks:
         - trigger: "orchestrator:complete"
           priority: 5
       observers:
-        - name: "Security Scanner"
-          role: "Find security vulnerabilities"
-          focus: "SQL injection, hardcoded credentials, code injection"
-          model: "claude-3-5-haiku-latest"
-          timeout: 30
+        - observer: observers/security-auditor
           watch:
             - type: files
               paths: ["**/*.py"]
@@ -59,6 +55,52 @@ tools:
 ```
 
 See `bundle.md` for full documentation and `examples/` for configuration patterns.
+
+## Multi-Bundle Observer Loading
+
+Observers can be loaded from different bundles using the `sources` configuration:
+
+```yaml
+hooks:
+  - module: hooks-observations
+    config:
+      # Map bundle names to their base paths
+      sources:
+        observers: /path/to/amplifier-bundle-observers
+        company: /path/to/company-observers-bundle
+        project: ./project-observers
+
+      observers:
+        # From the observers bundle
+        - observer: observers:observers/security-auditor
+          watch:
+            - type: files
+              paths: ["**/*.py"]
+
+        # From company bundle
+        - observer: company:observers/compliance-checker
+          watch:
+            - type: files
+              paths: ["**/*"]
+
+        # From project bundle
+        - observer: project:observers/custom-rules
+          watch:
+            - type: files
+              paths: ["src/**/*.py"]
+
+        # Local file (relative path)
+        - observer: ./my-custom-observer.md
+          watch:
+            - type: conversation
+```
+
+**Observer reference patterns:**
+- `bundle-name:path/to/observer` - Load from a specific bundle
+- `path/to/observer` - Load relative to base_path
+- `./local/observer.md` - Load from local file
+
+See `examples/multi-bundle-observers.yaml` for a complete example.
 
 ## Shadow Environment Testing
 
