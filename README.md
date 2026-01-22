@@ -45,7 +45,7 @@ hooks:
         - trigger: "orchestrator:complete"
           priority: 5
       observers:
-        - observer: observers/security-auditor
+        - observer: "@observers:observers/security-auditor"
           watch:
             - type: files
               paths: ["**/*.py"]
@@ -56,51 +56,44 @@ tools:
 
 See `bundle.md` for full documentation and `examples/` for configuration patterns.
 
-## Multi-Bundle Observer Loading
+## Observer Reference Patterns
 
-Observers can be loaded from different bundles using the `sources` configuration:
+Observer references use the same `@bundle:path` format as agents and context files in Amplifier, resolved via the `mention_resolver` capability:
 
 ```yaml
-hooks:
-  - module: hooks-observations
-    config:
-      # Map bundle names to their base paths
-      sources:
-        observers: /path/to/amplifier-bundle-observers
-        company: /path/to/company-observers-bundle
-        project: ./project-observers
+observers:
+  # Cross-bundle reference (resolved via mention_resolver)
+  - observer: "@observers:observers/security-auditor"
+    watch:
+      - type: files
+        paths: ["**/*.py"]
 
-      observers:
-        # From the observers bundle
-        - observer: observers:observers/security-auditor
-          watch:
-            - type: files
-              paths: ["**/*.py"]
+  # From another bundle in your includes
+  - observer: "@company:observers/compliance-checker"
+    watch:
+      - type: files
+        paths: ["**/*"]
 
-        # From company bundle
-        - observer: company:observers/compliance-checker
-          watch:
-            - type: files
-              paths: ["**/*"]
+  # Relative path (resolved from base_path)
+  - observer: "observers/custom-rules"
+    watch:
+      - type: files
+        paths: ["src/**/*.py"]
 
-        # From project bundle
-        - observer: project:observers/custom-rules
-          watch:
-            - type: files
-              paths: ["src/**/*.py"]
-
-        # Local file (relative path)
-        - observer: ./my-custom-observer.md
-          watch:
-            - type: conversation
+  # Local file
+  - observer: "./my-custom-observer.md"
+    watch:
+      - type: conversation
 ```
 
-**Observer reference patterns:**
-- `bundle-name:path/to/observer` - Load from a specific bundle
-- `path/to/observer` - Load relative to base_path
-- `./local/observer.md` - Load from local file
+**Reference patterns:**
+| Pattern | Resolution |
+|---------|------------|
+| `@bundle:path/to/observer` | Via `mention_resolver` capability (same as agents) |
+| `path/to/observer` | Relative to base_path |
+| `./local/observer.md` | Local file path |
 
-See `examples/multi-bundle-observers.yaml` for a complete example.
+The `mention_resolver` is automatically available when bundles are composed, so any bundle in your `includes` can be referenced.
 
 ## Shadow Environment Testing
 

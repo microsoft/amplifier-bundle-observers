@@ -163,7 +163,8 @@ Please review and address these observations in your response.
         if self._loaded_observers:
             return
 
-        sources = self._get_bundle_sources()
+        # Get mention_resolver capability for @bundle:path resolution
+        mention_resolver = self._get_mention_resolver()
 
         for ref in self.config.observers:
             if not ref.enabled:
@@ -172,7 +173,7 @@ Please review and address these observations in your response.
             try:
                 observer = await load_observer(
                     ref.observer,
-                    sources=sources,
+                    mention_resolver=mention_resolver,
                     base_path=self.base_path,
                 )
 
@@ -188,35 +189,33 @@ Please review and address these observations in your response.
             except Exception as e:
                 logger.error(f"Failed to load observer {ref.observer}: {e}")
 
-    def _get_bundle_sources(self) -> dict[str, str]:
-        """Get bundle sources for observer resolution.
+    def _get_mention_resolver(self) -> Any:
+        """Get the mention_resolver capability for @bundle:path resolution.
 
-        Sources can come from:
-        1. Explicit config.sources mapping (preferred)
-        2. Coordinator's bundle registry (auto-discovery)
+        The mention_resolver is registered by PreparedBundle.create_session()
+        and handles resolution of @bundle:path references to file paths.
 
         Returns:
-            Mapping of bundle names to their base paths
+            MentionResolver instance or None if not available
         """
-        sources: dict[str, str] = {}
-
-        # 1. Start with explicitly configured sources
-        if self.config.sources:
-            sources.update(self.config.sources)
-
-        # 2. Try to auto-discover from coordinator's bundle registry
         try:
-            bundles = self.coordinator.get("bundles")
-            if bundles:
-                for name, bundle in bundles.items():
-                    if name not in sources:  # Don't override explicit config
-                        bundle_base = getattr(bundle, "base_path", None)
-                        if bundle_base:
-                            sources[name] = str(bundle_base)
-        except Exception as e:
-            logger.debug(f"Could not get bundles from coordinator: {e}")
+            # Try get_capability first (standard pattern)
+            resolver = self.coordinator.get_capability("mention_resolver")
+            if resolver:
+                return resolver
+        except (AttributeError, TypeError):
+            pass
 
-        return sources
+        try:
+            # Fallback: try get() with capability name
+            resolver = self.coordinator.get("mention_resolver")
+            if resolver:
+                return resolver
+        except (AttributeError, TypeError):
+            pass
+
+        logger.debug("mention_resolver capability not available")
+        return None
 
     async def _load_protocol_instructions(self) -> str:
         """Load the observer protocol instructions from context file."""

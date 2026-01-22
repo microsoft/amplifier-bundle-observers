@@ -2,6 +2,11 @@
 #
 # Minimal setup with a single code reviewer watching Python files.
 # Good starting point for basic code quality monitoring.
+#
+# Observer reference patterns:
+#   - "@bundle:path/to/observer"  - Cross-bundle (uses mention_resolver)
+#   - "path/to/observer"          - Relative to base_path
+#   - "./local/observer.md"       - Local file
 
 hooks:
   - module: hooks-observations
@@ -17,7 +22,8 @@ hooks:
         on_timeout: skip
 
       observers:
-        - observer: observers/code-quality
+        # Using @bundle:path format (resolved via mention_resolver capability)
+        - observer: "@observers:observers/code-quality"
           watch:
             - type: files
               paths:

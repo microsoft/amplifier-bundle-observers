@@ -2,6 +2,11 @@
 
 This module handles loading observer definitions from markdown files with YAML frontmatter,
 similar to how agents are loaded in Amplifier.
+
+Observer references support:
+- @bundle:path/to/observer - Resolved via mention_resolver capability
+- path/to/observer - Relative to base_path
+- ./local/observer.md - Local file path
 """
 
 from __future__ import annotations
@@ -9,9 +14,17 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
+
+
+class MentionResolver(Protocol):
+    """Protocol for mention resolution (matches BaseMentionResolver)."""
+
+    def resolve(self, mention: str) -> Path | None:
+        """Resolve an @-mention to a file path."""
+        ...
 
 
 @dataclass
@@ -103,15 +116,15 @@ def parse_mentions(text: str) -> list[str]:
 
 async def resolve_mentions(
     text: str,
-    sources: dict[str, str],
+    mention_resolver: MentionResolver | None,
     base_path: Path,
 ) -> list[ContextFile]:
     """Resolve @-mentions in text to their content.
 
     Args:
         text: Text containing @-mentions
-        sources: Mapping of bundle names to their base paths
-        base_path: Base path for relative file resolution
+        mention_resolver: Resolver for @bundle:path mentions (from coordinator capability)
+        base_path: Base path for relative file resolution (fallback)
 
     Returns:
         List of resolved ContextFile objects
@@ -121,11 +134,8 @@ async def resolve_mentions(
     seen_paths: set[str] = set()
 
     for mention in mentions:
-        # Strip the @ prefix
-        ref = mention[1:]
-
         try:
-            path = resolve_mention_path(ref, sources, base_path)
+            path = resolve_mention_path(mention, mention_resolver, base_path)
             if path and str(path) not in seen_paths and path.exists():
                 seen_paths.add(str(path))
                 content = path.read_text(encoding="utf-8")
@@ -143,36 +153,37 @@ async def resolve_mentions(
 
 
 def resolve_mention_path(
-    ref: str,
-    sources: dict[str, str],
+    mention: str,
+    mention_resolver: MentionResolver | None,
     base_path: Path,
 ) -> Path | None:
-    """Resolve a mention reference to a file path.
+    """Resolve a mention to a file path.
 
-    Patterns:
-    - "bundle-name:path/file.md" → sources[bundle-name]/path/file.md
-    - "path/file.md" → base_path/path/file.md
+    Resolution order:
+    1. If starts with @, use mention_resolver (bundle resolution)
+    2. Otherwise, resolve relative to base_path
 
     Args:
-        ref: Reference string (without @ prefix)
-        sources: Mapping of bundle names to their base paths
+        mention: Mention string (with or without @ prefix)
+        mention_resolver: Resolver for @bundle:path mentions
         base_path: Base path for relative references
 
     Returns:
         Resolved Path or None if not resolvable
     """
-    if ":" in ref:
-        # Bundle reference: "bundle-name:path/file.md"
-        parts = ref.split(":", 1)
-        if len(parts) == 2:
-            bundle_name, path_str = parts
-            bundle_base = sources.get(bundle_name)
-            if bundle_base:
-                return Path(bundle_base) / path_str
-            # Fallback: treat as relative path
-            logger.debug(f"Bundle '{bundle_name}' not found in sources, treating as relative")
+    # If it's an @-mention, use the resolver
+    if mention.startswith("@"):
+        if mention_resolver:
+            resolved = mention_resolver.resolve(mention)
+            if resolved:
+                return resolved
+            logger.debug(f"mention_resolver could not resolve: {mention}")
+        else:
+            logger.debug(f"No mention_resolver available for: {mention}")
+        return None
 
-    # Relative reference
+    # Relative reference - resolve against base_path
+    ref = mention
     path = base_path / ref
     if path.exists():
         return path
@@ -187,18 +198,18 @@ def resolve_mention_path(
 
 def resolve_observer_path(
     observer_ref: str,
-    sources: dict[str, str],
+    mention_resolver: MentionResolver | None,
     base_path: Path,
 ) -> Path:
     """Resolve observer reference to file path.
 
     Patterns:
-    - "bundle-name:observers/name" → sources[bundle-name]/observers/name.md
+    - "@bundle:observers/name" → resolved via mention_resolver
     - "observers/name" → base_path/observers/name.md
 
     Args:
         observer_ref: Observer reference string
-        sources: Mapping of bundle names to their base paths
+        mention_resolver: Resolver for @bundle:path mentions
         base_path: Base path for relative references
 
     Returns:
@@ -207,28 +218,19 @@ def resolve_observer_path(
     Raises:
         FileNotFoundError: If observer file cannot be found
     """
-    if ":" in observer_ref:
-        # Bundle reference
-        parts = observer_ref.split(":", 1)
-        if len(parts) == 2:
-            bundle_name, obs_path = parts
-            bundle_base = sources.get(bundle_name)
-            if bundle_base:
-                # Try exact path first
-                path = Path(bundle_base) / obs_path
-                if path.exists():
-                    return path
-                # Try with .md extension
-                path_md = Path(bundle_base) / f"{obs_path}.md"
-                if path_md.exists():
-                    return path_md
-                raise FileNotFoundError(
-                    f"Observer not found: {observer_ref} (tried {path} and {path_md})"
-                )
-            raise FileNotFoundError(
-                f"Bundle '{bundle_name}' not found in sources. "
-                f"Available sources: {list(sources.keys())}"
-            )
+    # If it's an @-mention, use the resolver
+    if observer_ref.startswith("@"):
+        if mention_resolver:
+            resolved = mention_resolver.resolve(observer_ref)
+            if resolved and resolved.exists():
+                return resolved
+            # Try with .md extension
+            ref_with_md = observer_ref if observer_ref.endswith(".md") else f"{observer_ref}.md"
+            resolved_md = mention_resolver.resolve(ref_with_md)
+            if resolved_md and resolved_md.exists():
+                return resolved_md
+            raise FileNotFoundError(f"Observer not found via mention_resolver: {observer_ref}")
+        raise FileNotFoundError(f"No mention_resolver available to resolve: {observer_ref}")
 
     # Relative reference
     path = base_path / observer_ref
@@ -244,14 +246,14 @@ def resolve_observer_path(
 
 async def load_observer(
     observer_ref: str,
-    sources: dict[str, str],
+    mention_resolver: MentionResolver | None,
     base_path: Path,
 ) -> LoadedObserver:
-    """Load an observer from a bundle reference.
+    """Load an observer from a reference.
 
     Args:
-        observer_ref: "bundle:observers/name" or "observers/name" (relative)
-        sources: Mapping of bundle names to their base paths
+        observer_ref: "@bundle:observers/name" or "observers/name" (relative)
+        mention_resolver: Resolver for @bundle:path mentions (from coordinator capability)
         base_path: Base path for relative references
 
     Returns:
@@ -262,7 +264,7 @@ async def load_observer(
         ValueError: If observer file is malformed
     """
     # 1. Resolve observer path
-    path = resolve_observer_path(observer_ref, sources, base_path)
+    path = resolve_observer_path(observer_ref, mention_resolver, base_path)
     logger.debug(f"Loading observer from: {path}")
 
     # 2. Parse markdown + frontmatter
@@ -277,7 +279,7 @@ async def load_observer(
     tools = frontmatter.get("tools", [])
 
     # 4. Resolve @-mentions in the body
-    context_files = await resolve_mentions(body, sources, path.parent)
+    context_files = await resolve_mentions(body, mention_resolver, path.parent)
 
     # 5. Build LoadedObserver
     return LoadedObserver(

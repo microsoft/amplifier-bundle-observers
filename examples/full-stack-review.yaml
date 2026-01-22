@@ -19,54 +19,54 @@ hooks:
 
       observers:
         # Backend (Python)
-        - observer: observers/python-best-practices
+        - observer: "@observers:observers/python-best-practices"
           watch:
             - type: files
               paths: ["**/*.py"]
 
-        - observer: observers/async-patterns
+        - observer: "@observers:observers/async-patterns"
           watch:
             - type: files
               paths: ["**/*.py"]
 
         # Frontend (TypeScript/React)
-        - observer: observers/typescript-reviewer
+        - observer: "@observers:observers/typescript-reviewer"
           watch:
             - type: files
               paths: ["**/*.ts", "**/*.tsx"]
 
-        - observer: observers/react-reviewer
+        - observer: "@observers:observers/react-reviewer"
           watch:
             - type: files
               paths: ["**/*.tsx", "**/*.jsx"]
 
         # Database
-        - observer: observers/sql-reviewer
+        - observer: "@observers:observers/sql-reviewer"
           watch:
             - type: files
               paths: ["**/*.py", "**/*.sql"]
 
         # API Design
-        - observer: observers/api-design
+        - observer: "@observers:observers/api-design"
           watch:
             - type: files
               paths: ["**/routes/**", "**/api/**", "**/*.py"]
 
         # Security (all code)
-        - observer: observers/security-auditor
+        - observer: "@observers:observers/security-auditor"
           model: claude-sonnet-4-20250514  # Use stronger model for security
           watch:
             - type: files
               paths: ["**/*"]
 
         # Accessibility (frontend)
-        - observer: observers/accessibility-checker
+        - observer: "@observers:observers/accessibility-checker"
           watch:
             - type: files
               paths: ["**/*.tsx", "**/*.jsx", "**/*.html"]
 
         # Config and DevOps
-        - observer: observers/config-reviewer
+        - observer: "@observers:observers/config-reviewer"
           watch:
             - type: files
               paths:

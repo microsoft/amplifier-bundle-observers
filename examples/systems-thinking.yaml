@@ -19,31 +19,31 @@ hooks:
 
       observers:
         # Systems dynamics
-        - observer: observers/systems-dynamics
+        - observer: "@observers:observers/systems-dynamics"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Unintended consequences
-        - observer: observers/second-order-effects
+        - observer: "@observers:observers/second-order-effects"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Find high-leverage interventions
-        - observer: observers/leverage-points
+        - observer: "@observers:observers/leverage-points"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Check for cognitive biases
-        - observer: observers/bias-detector
+        - observer: "@observers:observers/bias-detector"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Ensure stakeholders are considered
-        - observer: observers/stakeholder-analyzer
+        - observer: "@observers:observers/stakeholder-analyzer"
           watch:
             - type: conversation
               include_reasoning: true

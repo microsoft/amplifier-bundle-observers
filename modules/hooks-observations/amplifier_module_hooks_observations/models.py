@@ -288,23 +288,21 @@ class HookConfig:
 class ObservationsModuleConfig:
     """Complete configuration for the hooks-observations module.
 
-    The `sources` field maps bundle names to their base paths, enabling
-    observers to be loaded from different bundles:
+    Observer references support multiple formats:
+        - @bundle:path/to/observer  - Resolved via mention_resolver capability
+        - path/to/observer          - Relative to base_path
+        - ./local/observer.md       - Local file path
 
-        sources:
-          observers: /path/to/observers-bundle
-          my-bundle: /path/to/my-bundle
-
+    Example:
         observers:
-          - observer: observers:observers/security-auditor  # from observers bundle
-          - observer: my-bundle:custom/reviewer             # from my-bundle
-          - observer: ./local/observer.md                   # local file
+          - observer: "@observers:observers/security-auditor"
+          - observer: "observers/code-quality"
+          - observer: "./my-custom-observer.md"
     """
 
     hooks: list[HookConfig] = field(default_factory=list)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     observers: list[ObserverReference] = field(default_factory=list)
-    sources: dict[str, str] = field(default_factory=dict)  # bundle_name -> base_path
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ObservationsModuleConfig":
@@ -320,23 +318,16 @@ class ObservationsModuleConfig:
 
         observers = [ObserverReference.from_dict(o) for o in data.get("observers", [])]
 
-        # Bundle sources mapping
-        sources = data.get("sources", {})
-
         return cls(
             hooks=hooks,
             execution=execution,
             observers=observers,
-            sources=sources,
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        result = {
+        return {
             "hooks": [h.to_dict() for h in self.hooks],
             "execution": self.execution.to_dict(),
             "observers": [o.to_dict() for o in self.observers],
         }
-        if self.sources:
-            result["sources"] = self.sources
-        return result

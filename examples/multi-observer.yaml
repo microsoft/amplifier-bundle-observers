@@ -2,6 +2,8 @@
 #
 # Multiple specialized observers running in parallel for comprehensive review.
 # Each observer focuses on a specific aspect of code quality.
+#
+# Observer references use @bundle:path format, resolved via mention_resolver capability.
 
 hooks:
   - module: hooks-observations
@@ -19,7 +21,7 @@ hooks:
 
       observers:
         # Security focused review
-        - observer: observers/security-auditor
+        - observer: "@observers:observers/security-auditor"
           watch:
             - type: files
               paths:
@@ -28,7 +30,7 @@ hooks:
               include_tool_calls: true
 
         # Secrets detection
-        - observer: observers/secrets-scanner
+        - observer: "@observers:observers/secrets-scanner"
           watch:
             - type: files
               paths:
@@ -38,14 +40,14 @@ hooks:
                 - "**/*.env*"
 
         # Performance analysis
-        - observer: observers/performance-reviewer
+        - observer: "@observers:observers/performance-reviewer"
           watch:
             - type: files
               paths:
                 - "src/**/*.py"
 
         # Test coverage
-        - observer: observers/test-quality
+        - observer: "@observers:observers/test-quality"
           watch:
             - type: files
               paths:
@@ -53,7 +55,7 @@ hooks:
                 - "tests/**/*.py"
 
         # Logic and reasoning
-        - observer: observers/logic-checker
+        - observer: "@observers:observers/logic-checker"
           watch:
             - type: conversation
               include_tool_calls: true

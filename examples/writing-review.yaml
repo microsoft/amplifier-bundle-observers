@@ -19,25 +19,25 @@ hooks:
 
       observers:
         # Overall writing quality
-        - observer: observers/writing-quality
+        - observer: "@observers:observers/writing-quality"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Communication effectiveness
-        - observer: observers/communication-reviewer
+        - observer: "@observers:observers/communication-reviewer"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Argument strength
-        - observer: observers/argument-analyzer
+        - observer: "@observers:observers/argument-analyzer"
           watch:
             - type: conversation
               include_reasoning: true
 
         # Keep it simple
-        - observer: observers/simplicity-guardian
+        - observer: "@observers:observers/simplicity-guardian"
           watch:
             - type: conversation
               include_reasoning: true

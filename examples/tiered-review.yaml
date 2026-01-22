@@ -19,26 +19,26 @@ hooks:
 
       observers:
         # Tier 1: Fast scans with Haiku (uses model from observer file)
-        - observer: observers/python-best-practices
+        - observer: "@observers:observers/python-best-practices"
           watch:
             - type: files
               paths:
                 - "**/*.py"
 
-        - observer: observers/error-handling
+        - observer: "@observers:observers/error-handling"
           watch:
             - type: files
               paths:
                 - "**/*.py"
 
-        - observer: observers/secrets-scanner
+        - observer: "@observers:observers/secrets-scanner"
           watch:
             - type: files
               paths:
                 - "**/*"
 
         # Tier 2: Deep analysis with Sonnet (override model for thorough review)
-        - observer: observers/security-auditor
+        - observer: "@observers:observers/security-auditor"
           model: claude-sonnet-4-20250514  # Override to more capable model
           watch:
             - type: files
@@ -47,7 +47,7 @@ hooks:
             - type: conversation
               include_tool_calls: true
 
-        - observer: observers/architecture-reviewer
+        - observer: "@observers:observers/architecture-reviewer"
           model: claude-sonnet-4-20250514
           watch:
             - type: conversation
