@@ -6,7 +6,6 @@ bundle:
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
 
 hooks:
   - module: hooks-observations
@@ -34,18 +33,29 @@ tools:
 
 # Simple Observer Bundle
 
-Minimal setup with a single code reviewer watching Python files. Good starting point for basic code quality monitoring.
+You are working with a minimal observer configuration focused on **code quality**.
 
-## Usage
+## Active Observer
 
-```bash
-# Register the bundle
-amplifier bundle add examples/simple-observer.md --name simple-observer
+One observer is monitoring your work:
 
-# Run with it
-amplifier run -B simple-observer
-```
+| Observer | What It Watches | Focus Areas |
+|----------|-----------------|-------------|
+| **code-quality** | Python files (`src/**/*.py`, `**/*.py`) | Code smells (long functions, deep nesting), error handling issues, resource leaks (unclosed files/connections), missing type hints and documentation |
 
-## What It Does
+## When It Triggers
 
-After each response, the code-quality observer analyzes any Python files that were read or modified during the conversation and surfaces observations about code quality issues.
+The observer activates after each response (`orchestrator:complete`) when:
+- You read Python files
+- You write or edit Python files
+- File contents change (detected by path/mtime/size hash)
+
+## Using Observations
+
+The code-quality observer will create observations with severity levels:
+- **High** - Significant issues like resource leaks or missing error handling
+- **Medium** - Code smells and maintainability concerns
+- **Low** - Style suggestions and minor improvements
+- **Info** - Informational notes about patterns
+
+Address high-severity observations before completing work. Medium and low observations can be addressed when convenient.

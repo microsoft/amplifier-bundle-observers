@@ -6,7 +6,6 @@ bundle:
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
 
 hooks:
   - module: hooks-observations
@@ -22,54 +21,54 @@ hooks:
         on_timeout: skip
       observers:
         # Backend (Python)
-        - observer: "@observers:observers/python-best-practices"
+        - observer: observers/python-best-practices
           watch:
             - type: files
               paths: ["**/*.py"]
 
-        - observer: "@observers:observers/async-patterns"
+        - observer: observers/async-patterns
           watch:
             - type: files
               paths: ["**/*.py"]
 
         # Frontend (TypeScript/React)
-        - observer: "@observers:observers/typescript-reviewer"
+        - observer: observers/typescript-reviewer
           watch:
             - type: files
               paths: ["**/*.ts", "**/*.tsx"]
 
-        - observer: "@observers:observers/react-reviewer"
+        - observer: observers/react-reviewer
           watch:
             - type: files
               paths: ["**/*.tsx", "**/*.jsx"]
 
         # Database
-        - observer: "@observers:observers/sql-reviewer"
+        - observer: observers/sql-reviewer
           watch:
             - type: files
               paths: ["**/*.py", "**/*.sql"]
 
         # API Design
-        - observer: "@observers:observers/api-design"
+        - observer: observers/api-design
           watch:
             - type: files
               paths: ["**/routes/**", "**/api/**", "**/*.py"]
 
         # Security (all code)
-        - observer: "@observers:observers/security-auditor"
+        - observer: observers/security-auditor
           model: claude-sonnet-4-20250514
           watch:
             - type: files
               paths: ["**/*"]
 
         # Accessibility (frontend)
-        - observer: "@observers:observers/accessibility-checker"
+        - observer: observers/accessibility-checker
           watch:
             - type: files
               paths: ["**/*.tsx", "**/*.jsx", "**/*.html"]
 
         # Config and DevOps
-        - observer: "@observers:observers/config-reviewer"
+        - observer: observers/config-reviewer
           watch:
             - type: files
               paths:
@@ -87,31 +86,41 @@ tools:
 
 # Full-Stack Review Bundle
 
-Comprehensive review for full-stack web development. Covers Python backend, TypeScript/React frontend, SQL, APIs, and infrastructure.
+You are working with **comprehensive full-stack review** across nine specialized observers covering backend, frontend, database, API, security, accessibility, and infrastructure.
 
-## Usage
+## Active Observers (9 Total)
 
-```bash
-amplifier bundle add examples/full-stack-review.md --name full-stack-review
-amplifier run -B full-stack-review
-```
+| Layer | Observer | What It Watches | Focus Areas |
+|-------|----------|-----------------|-------------|
+| **Backend** | python-best-practices | Python files | PEP 8, Python idioms, design patterns, code organization |
+| | async-patterns | Python files | Async/await correctness, event loop usage, concurrent execution patterns |
+| **Frontend** | typescript-reviewer | TypeScript files (`.ts`, `.tsx`) | Type safety, TypeScript best practices, type definitions |
+| | react-reviewer | React files (`.tsx`, `.jsx`) | Component patterns, hooks usage, state management, React best practices |
+| **Database** | sql-reviewer | Python + SQL files | Query optimization, N+1 queries, database patterns, SQL injection prevention |
+| **API** | api-design | Route/API files | REST conventions, HTTP method usage, endpoint design, error responses |
+| **Security** | security-auditor | All files (uses Sonnet-4 model) | Vulnerabilities, authentication/authorization, input validation, security best practices |
+| **Accessibility** | accessibility-checker | Frontend files (`.tsx`, `.jsx`, `.html`) | WCAG compliance, semantic HTML, ARIA usage, keyboard navigation |
+| **DevOps** | config-reviewer | Config files (YAML, JSON, TOML, Dockerfile, .env) | Configuration best practices, security in configs, environment management |
 
-## Observers
+## Execution Parameters
 
-| Layer | Observer | Focus |
-|-------|----------|-------|
-| **Backend** | python-best-practices | PEP 8, idioms, patterns |
-| | async-patterns | Async/await correctness |
-| **Frontend** | typescript-reviewer | TS best practices, types |
-| | react-reviewer | React patterns, hooks |
-| **Database** | sql-reviewer | Query optimization, N+1 |
-| **API** | api-design | REST/GraphQL conventions |
-| **Security** | security-auditor | Vulnerabilities (Sonnet) |
-| **A11y** | accessibility-checker | WCAG compliance |
-| **DevOps** | config-reviewer | Config best practices |
+- **Max concurrent**: 8 observers run in parallel
+- **Timeout**: 45 seconds per observer
+- **Security observer uses Sonnet-4**: More expensive model for critical security analysis
 
-## Best For
+## When to Use This Bundle
 
-- Full-stack web applications
-- Projects with Python backend + React frontend
-- Teams wanting comprehensive automated review
+This configuration is ideal when:
+- Working on full-stack applications (Python backend + React/TypeScript frontend)
+- You need comprehensive review across all layers of the stack
+- You want specialized expertise for each technology (not generic code review)
+- The project has database, API, and infrastructure concerns
+
+## Handling Observations from Multiple Observers
+
+With 9 observers active, you may receive observations from multiple domains simultaneously:
+
+1. **Prioritize by severity** first (critical → high → medium → low)
+2. **Then by layer** - Fix security issues before style issues
+3. **Use observer expertise** - Each observer is a specialist, trust their domain knowledge
+4. **Address cross-cutting concerns** - If multiple observers flag the same code, it's a design smell

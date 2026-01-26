@@ -6,7 +6,6 @@ bundle:
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
 
 hooks:
   - module: hooks-observations
@@ -21,22 +20,22 @@ hooks:
         timeout_per_observer: 45
         on_timeout: skip
       observers:
-        - observer: "@observers:observers/writing-quality"
+        - observer: observers/writing-quality
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/communication-reviewer"
+        - observer: observers/communication-reviewer
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/argument-analyzer"
+        - observer: observers/argument-analyzer
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/simplicity-guardian"
+        - observer: observers/simplicity-guardian
           watch:
             - type: conversation
               include_reasoning: true
@@ -48,28 +47,43 @@ tools:
 
 # Writing Review Bundle
 
-Observers focused on written content quality. Useful for documentation, emails, reports, and communications.
+You are working with **four specialized observers** focused on written content quality. These observers analyze your communication, documentation, and written reasoning for clarity, effectiveness, and impact.
 
-## Usage
+## Active Observers (4 Total)
 
-```bash
-amplifier bundle add examples/writing-review.md --name writing-review
-amplifier run -B writing-review
-```
+| Observer | What It Watches | Focus Areas |
+|----------|-----------------|-------------|
+| **writing-quality** | Conversation with reasoning | Clarity, structure, grammar, tone consistency, readability, sentence flow |
+| **communication-reviewer** | Conversation with reasoning | Message effectiveness, audience appropriateness, persuasiveness, call-to-action clarity |
+| **argument-analyzer** | Conversation with reasoning | Logical structure, evidence quality, reasoning validity, claim support, counterargument consideration |
+| **simplicity-guardian** | Conversation with reasoning | Unnecessary complexity, jargon usage, verbosity, unclear abstractions, over-engineering in language |
 
-## Observers
+## When Observers Trigger
 
-| Observer | Focus |
-|----------|-------|
-| writing-quality | Clarity, structure, grammar, tone |
-| communication-reviewer | Message effectiveness, audience fit |
-| argument-analyzer | Logical structure, evidence, persuasion |
-| simplicity-guardian | Unnecessary complexity, jargon, verbosity |
+These observers watch **conversation with reasoning** enabled. They activate when you:
 
-## Try It
+- Draft documentation, emails, or reports
+- Explain complex concepts to the user
+- Write instructions or guides
+- Construct arguments or recommendations
+- Communicate decisions or trade-offs
 
-Draft an email or document and ask for feedback:
+## What Makes This Different
 
-> "Review this announcement for our team about the new deployment process..."
+Unlike code-focused observers, these analyze **how you communicate**:
 
-The observers will analyze your writing for clarity, effectiveness, and potential improvements.
+- **Writing quality** ensures your text is clear and well-structured
+- **Communication reviewer** checks if your message will land with the intended audience
+- **Argument analyzer** validates your reasoning and evidence
+- **Simplicity guardian** ensures you're not over-complicating explanations
+
+## Using Observer Feedback
+
+When these observers provide observations:
+
+1. **Clarity issues** - Rewrite confusing sections before presenting to user
+2. **Weak arguments** - Strengthen your reasoning with better evidence
+3. **Jargon alerts** - Simplify language for better understanding
+4. **Structural problems** - Reorganize for better flow
+
+These observers help you communicate more effectively, especially when drafting content the user will share externally (team announcements, documentation, reports).

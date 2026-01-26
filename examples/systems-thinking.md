@@ -6,7 +6,6 @@ bundle:
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
 
 hooks:
   - module: hooks-observations
@@ -53,29 +52,38 @@ tools:
 
 # Systems Thinking Bundle
 
-Observers focused on systemic analysis, not just code. Great for architecture discussions, planning sessions, and decision-making.
+You are working with a session configured for **systems thinking analysis**. This bundle activates specialized observers that analyze architectural decisions, planning discussions, and complex problem-solving from a systemic perspective.
 
-## Usage
+## Active Observers
 
-```bash
-amplifier bundle add examples/systems-thinking.md --name systems-thinking
-amplifier run -B systems-thinking
-```
+Five observers are monitoring your conversation to surface systemic insights:
 
-## Observers
+| Observer | What It Analyzes |
+|----------|------------------|
+| **systems-dynamics** | Feedback loops, stocks and flows, system behavior patterns |
+| **second-order-effects** | Unintended consequences, ripple effects, downstream impacts |
+| **leverage-points** | High-impact intervention opportunities, where to focus effort |
+| **bias-detector** | Cognitive biases affecting your reasoning and decisions |
+| **stakeholder-analyzer** | Who's affected by decisions, power dynamics, incentives |
 
-| Observer | Focus |
-|----------|-------|
-| systems-dynamics | Feedback loops, stocks and flows, system behavior |
-| second-order-effects | Unintended consequences, ripple effects |
-| leverage-points | High-impact intervention opportunities |
-| bias-detector | Cognitive biases affecting decisions |
-| stakeholder-analyzer | Who's affected and how |
+## When Observers Trigger
 
-## Try It
+These observers watch **conversation with reasoning** enabled. They activate during:
 
-Start a conversation about a complex decision:
+- Architecture and design discussions
+- Decision-making about system changes
+- Planning complex implementations
+- Trade-off analysis
+- Problem decomposition
 
-> "I'm thinking about migrating our monolith to microservices. What should I consider?"
+## Using Observer Feedback
 
-The observers will surface systemic considerations you might miss.
+When observers provide observations:
+
+1. **Review their systemic insights** - They see patterns you might miss
+2. **Consider second-order effects** - What ripples from this decision?
+3. **Identify leverage points** - Where can small changes create large impact?
+4. **Check for biases** - Are you anchoring on first ideas or discounting alternatives?
+5. **Map stakeholders** - Who wins/loses from this choice?
+
+These observers complement your technical analysis with systemic perspective. They're especially valuable when you're focused on implementation details and might miss broader implications.

@@ -6,7 +6,6 @@ bundle:
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
 
 hooks:
   - module: hooks-observations
@@ -21,29 +20,29 @@ hooks:
         timeout_per_observer: 45
         on_timeout: skip
       observers:
-        - observer: "@observers:observers/security-auditor"
+        - observer: observers/security-auditor
           watch:
             - type: files
               paths: ["src/**/*.py"]
             - type: conversation
               include_tool_calls: true
 
-        - observer: "@observers:observers/secrets-scanner"
+        - observer: observers/secrets-scanner
           watch:
             - type: files
               paths: ["**/*.py", "**/*.yaml", "**/*.json", "**/*.env*"]
 
-        - observer: "@observers:observers/performance-reviewer"
+        - observer: observers/performance-reviewer
           watch:
             - type: files
               paths: ["src/**/*.py"]
 
-        - observer: "@observers:observers/test-quality"
+        - observer: observers/test-quality
           watch:
             - type: files
               paths: ["src/**/*.py", "tests/**/*.py"]
 
-        - observer: "@observers:observers/logic-checker"
+        - observer: observers/logic-checker
           watch:
             - type: conversation
               include_tool_calls: true
@@ -56,21 +55,30 @@ tools:
 
 # Multi-Observer Bundle
 
-Multiple specialized observers running in parallel for comprehensive review. Each observer focuses on a specific aspect of code quality.
+You are working with **five specialized observers** running in parallel for comprehensive code review. Each observer focuses on a specific quality dimension.
 
-## Usage
+## Active Observers
 
-```bash
-amplifier bundle add examples/multi-observer.md --name multi-observer
-amplifier run -B multi-observer
-```
+| Observer | What It Watches | Focus Areas |
+|----------|-----------------|-------------|
+| **security-auditor** | Python files + conversation | Security vulnerabilities, injection attacks, authentication/authorization issues |
+| **secrets-scanner** | All files (Python, YAML, JSON, env) | Hardcoded credentials, API keys, exposed secrets |
+| **performance-reviewer** | Python files (`src/**/*.py`) | Performance issues, inefficiencies, algorithmic problems, unnecessary computation |
+| **test-quality** | Source and test files | Test coverage, test quality, missing edge cases, brittle tests |
+| **logic-checker** | Conversation with reasoning | Logical errors, reasoning flaws, invalid assumptions, incomplete analysis |
 
-## Observers
+## Observer Strategy
 
-| Observer | Focus |
-|----------|-------|
-| security-auditor | Security vulnerabilities, injection attacks |
-| secrets-scanner | Hardcoded credentials, API keys |
-| performance-reviewer | Performance issues, inefficiencies |
-| test-quality | Test coverage and quality |
-| logic-checker | Logical errors and reasoning flaws |
+This configuration uses **breadth over depth** - multiple specialized observers catch different issue types in parallel:
+
+- **Security & Secrets** work together: one finds code vulnerabilities, one finds exposed credentials
+- **Performance & Test Quality** ensure production readiness
+- **Logic Checker** monitors your reasoning process in real-time
+
+## Execution Parameters
+
+- **Max concurrent**: 5 observers run in parallel
+- **Timeout**: 45 seconds per observer
+- **On timeout**: Skip (continues even if an observer times out)
+
+Use this bundle when you want **comprehensive automated review** across multiple quality dimensions, not just code style.

@@ -44,77 +44,51 @@ hooks:
 
 # Observer Bundle
 
-Provides automated code and conversation review through specialized AI observers.
+You are working with automated code and conversation review through specialized AI observers.
 
 @observers:context/instructions.md
 
 ---
 
-## Overview
+## Active Observers
 
-The Observer Bundle enables parallel, automated review of your work through specialized AI observers. Observers can monitor:
+This bundle has **two observers** monitoring your work:
 
-- **Files**: Watch for changes in source code, configs, or any files
-- **Conversation**: Monitor reasoning, tool usage, and responses
-- **Both**: Comprehensive review of artifacts and methodology
+| Observer | What It Watches | Focus Areas |
+|----------|-----------------|-------------|
+| **security-auditor** | Python files (`**/*.py`) | SQL injection, code injection (eval/exec), hardcoded credentials, authentication/authorization issues, input validation |
+| **code-quality** | Python files (`**/*.py`) | Code smells (long functions, deep nesting), error handling, resource leaks, missing type hints, documentation quality |
 
-## Quick Start
+## How Observers Work
 
-Include this bundle and configure observers for your use case:
+**Trigger**: After each orchestrator cycle completes (`orchestrator:complete` event)
 
-```yaml
-includes:
-  - bundle: git+https://github.com/payneio/amplifier-bundle-observers@main
+**Process**:
+1. Detect changes in watched files or conversation
+2. Spawn observers in parallel (up to 10 concurrent)
+3. Each observer analyzes and reports findings
+4. Observations are created with severity: critical, high, medium, low, info
+5. You receive a system-reminder with observation summaries
 
-hooks:
-  - module: hooks-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
-    config:
-      observers:
-        # Reference built-in observers
-        - observer: observers/security-auditor
-          watch:
-            - type: files
-              paths: ["src/**/*.py"]
-        
-        # Reference with model override
-        - observer: observers/code-quality
-          model: claude-sonnet-4-20250514  # Use more capable model
-          watch:
-            - type: files
-              paths: ["src/**/*.py"]
-```
+**Change detection**: Files are tracked by (path, mtime, size) hash. Only changed files trigger reviews.
 
-## Architecture
+## Responding to Observations
 
-Three modules working together:
+When observers create observations:
 
-1. **tool-observations**: State management (CRUD for observations)
-2. **hooks-observations**: Observer orchestration (parallel spawning, change detection)
-3. **hooks-observations-display**: Optional visualization
+1. **Critical/High severity** - Address immediately, these are blocking issues
+2. **Medium severity** - Address before completing the task
+3. **Low/Info severity** - Note for future reference
 
-## Using the Observations Tool
+Use the `observations` tool to:
+- List: `observations list filters={"status": "open"}`
+- Acknowledge: `observations acknowledge observation_id=<uuid>`
+- Resolve: `observations resolve observation_id=<uuid> resolution_note="Fixed by..."`
 
-List open observations:
-```
-observations list status=open
-```
+## Observer Capabilities
 
-Filter by severity:
-```
-observations list filters={"severity": ["critical", "high"]}
-```
+Both observers have access to:
+- **grep**: Search for patterns across files
+- **read_file**: Read full file contents for context
 
-Acknowledge an observation:
-```
-observations acknowledge observation_id=<uuid>
-```
-
-Resolve an observation:
-```
-observations resolve observation_id=<uuid> resolution_note="Fixed in commit abc123"
-```
-
-## Configuration Reference
-
-See `@observers:context/instructions.md` for detailed configuration options.
+They use these tools to verify findings and reduce false positives before creating observations.
