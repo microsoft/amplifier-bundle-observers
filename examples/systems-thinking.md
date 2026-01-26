@@ -21,27 +21,27 @@ hooks:
         timeout_per_observer: 45
         on_timeout: skip
       observers:
-        - observer: "@observers:observers/systems-dynamics"
+        - observer: observers/systems-dynamics
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/second-order-effects"
+        - observer: observers/second-order-effects
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/leverage-points"
+        - observer: observers/leverage-points
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/bias-detector"
+        - observer: observers/bias-detector
           watch:
             - type: conversation
               include_reasoning: true
 
-        - observer: "@observers:observers/stakeholder-analyzer"
+        - observer: observers/stakeholder-analyzer
           watch:
             - type: conversation
               include_reasoning: true
