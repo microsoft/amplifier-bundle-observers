@@ -9,7 +9,7 @@ includes:
 
 hooks:
   - module: hooks-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
     config:
       hooks:
         - trigger: "orchestrator:complete"
@@ -81,7 +81,7 @@ hooks:
 
 tools:
   - module: tool-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/tool-observations
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/tool-observations
 ---
 
 # Full-Stack Review Bundle
