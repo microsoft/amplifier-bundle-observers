@@ -26,19 +26,19 @@ We've created 6 ready-to-use bundles for common scenarios:
 ```bash
 # Systems thinking for architecture and decision-making
 amplifier bundle add \
-  "git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=examples/systems-thinking.md" \
+  "git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=examples/systems-thinking.md" \
   --name systems-thinking
 amplifier run -B systems-thinking
 
 # Code quality for Python development
 amplifier bundle add \
-  "git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=examples/simple-observer.md" \
+  "git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=examples/simple-observer.md" \
   --name code-review
 amplifier run -B code-review
 
 # Full-stack web development review
 amplifier bundle add \
-  "git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=examples/full-stack-review.md" \
+  "git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=examples/full-stack-review.md" \
   --name full-stack
 amplifier run -B full-stack
 ```
@@ -46,7 +46,7 @@ amplifier run -B full-stack
 Or run directly without registering:
 
 ```bash
-amplifier run --bundle "git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=examples/systems-thinking.md"
+amplifier run --bundle "git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=examples/systems-thinking.md"
 ```
 
 ## Available Examples
@@ -142,26 +142,26 @@ Example configuration:
 ```yaml
 hooks:
   - module: hooks-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
     config:
       hooks:
         - trigger: "orchestrator:complete"
           priority: 5
       observers:
         # Reference observers from this bundle
-        - observer: "@observers:observers/security-auditor"
+        - observer: observers:observers/security-auditor"
           watch:
             - type: files
               paths: ["**/*.py"]
         
-        - observer: "@observers:observers/performance-reviewer"
+        - observer: observers:observers/performance-reviewer"
           watch:
             - type: files
               paths: ["src/**/*.py"]
 
 tools:
   - module: tool-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/tool-observations
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/tool-observations
 ```
 
 ## How Observations Work

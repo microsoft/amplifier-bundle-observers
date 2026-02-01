@@ -124,7 +124,7 @@ Observers are referenced in the hook config with watch patterns:
 ```yaml
 hooks:
   - module: hooks-observations
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations
     config:
       observers:
         # Reference an observer from this bundle
@@ -231,7 +231,7 @@ The optional display module shows observation status:
 ```yaml
 hooks:
   - module: hooks-observations-display
-    source: git+https://github.com/payneio/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations-display
+    source: git+https://github.com/microsoft/amplifier-bundle-observers@main#subdirectory=modules/hooks-observations-display
     config:
       style: compact        # "compact" | "table" | "progress_bar"
       show_on_create: true
