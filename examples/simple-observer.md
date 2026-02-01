@@ -19,7 +19,7 @@ hooks:
         timeout_per_observer: 30
         on_timeout: skip
       observers:
-        - observer: "@observers:observers/code-quality"
+        - observer: observers:observers/code-quality"
           watch:
             - type: files
               paths:
